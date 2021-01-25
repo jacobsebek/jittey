@@ -838,18 +838,14 @@ static void load_from_file(PCWSTR fpath) {
         return;
     }
 
+    BOOL fail = FALSE;
+
     // Get the file size
     LARGE_INTEGER filesize;
     if (!GetFileSizeEx(in, &filesize))
         fatal(L"Failed to retrieve file size");
 
     CONST SIZE_T src_size = filesize.QuadPart;
-
-    // Check if it's not empty (because MultiByeToWideChar fails with empty buffers)
-    if (src_size == 0) {
-        SetWindowTextW(Gui.text_box, L"");
-        goto quit;
-    }
 
     // Check if it's not too big
     CONST SIZE_T maxchars = SendMessageW(Gui.text_box, EM_GETLIMITTEXT, 0, 0);
@@ -861,6 +857,7 @@ static void load_from_file(PCWSTR fpath) {
             maxchars * sizeof(WCHAR), 
             maxchars);
         
+        fail = TRUE;
         goto quit;
     }
 
@@ -875,6 +872,8 @@ static void load_from_file(PCWSTR fpath) {
         fatal(L"Failed to read the input file");
 
     // Add the null terminator
+    // We don't know the encoding, but a sizeof(WCHAR) is the biggest one
+    // If the string is e.g. UTF-8, only the first byte of the terminator matters
     memset((PBYTE)src+src_size, 0, sizeof(WCHAR));
 
     // Deal with file format
@@ -882,8 +881,10 @@ static void load_from_file(PCWSTR fpath) {
     change_format(source_format);
 
     PWSTR converted = convert(src, source_format, Internal_format, TRUE, TRUE, NULL);
-    if (!converted)
+    if (!converted) {
+        fail = TRUE;
         goto quit;
+    }
 
     SetWindowTextW(Gui.text_box, converted);
 
@@ -893,10 +894,12 @@ static void load_from_file(PCWSTR fpath) {
     quit:
 
     if (!CloseHandle(in)) 
-        fatal(L"Failed to close file handle");
+        fatal(L"Failed to close the file handle");
 
-    change_filename(fpath);
-    Settings.is_new = FALSE;
+    if (!fail) {
+        change_filename(fpath);
+        Settings.is_new = FALSE;
+    }
 }
 
 // The procedure used for the main window, can be used for only one window because it uses the global variable 'Window' internally
@@ -1071,7 +1074,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         case GUI_MENU_ABOUT: 
                             MessageBoxW(
                                 Window, 
-                                L"This application is public domain, the source code is publicly available at github.com/jacobsebek/JTEdit\n"
+                                L"This application is public domain, the source code is publicly available at github.com/jacobsebek/jittey\n"
                                 L"There is no warranty, use at own risk of losing your files.",
                                 L"About",
                                 MB_OK | MB_ICONINFORMATION);
