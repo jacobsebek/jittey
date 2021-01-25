@@ -1,0 +1,4 @@
+#include "winuser.h"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "jittey.exe.manifest"
+myIcon ICON "icon.ico"
