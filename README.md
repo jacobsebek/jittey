@@ -12,8 +12,8 @@ rc /r /fo outres.res rds.rc
 cl main.c outres.res /Fe:jittey.exe /link /LIBPATH:"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.18362.0\um\x86\" User32.Lib Gdi32.Lib Comdlg32.Lib Comctl32.Lib Advapi32.Lib Shell32.Lib
 ```
 ### MinGW64, TDM-GCC
-The process is farily similar on MinGW, the library path is set automatically, as MinGW comes with it's own Windows SDK. To my surprise, it also comes with a tool called `windres`, which is basically the equivalent of `rc`. Note that gcc supports only `.coff` files, so we cannot feed it `.res` files.
+The process is farily similar on MinGW, the library path is set automatically, as MinGW comes with its own Windows SDK. To my surprise, it also comes with a tool called `windres`, which is basically the equivalent of `rc`. Note that gcc supports only `.coff` files, so we cannot feed it `.res` files.
 ```
 windres -i rds.rc -o outres.coff
-gcc main.c outres.coff -lUser32 -lComdlg32 -lgdi32 -lMsimg32 -lComctl32 -o jittey.exe
+gcc main.c outres.coff -lUser32 -lComdlg32 -lgdi32 -lMsimg32 -lComctl32 -o jittey.exe -mwindows
 ```
