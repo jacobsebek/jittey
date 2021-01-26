@@ -586,7 +586,7 @@ static PVOID convert(PVOID src, CONST struct format from, CONST struct format to
             // First, count the amount of characters needed
             SIZE_T newinter_length = 0;
             BOOL skip = TRUE;
-            for (PCWCHAR wc = inter; *wc; wc++) {
+            for (CONST WCHAR* wc = inter; *wc; wc++) {
                 if (!wcsncmp(wc, L"\r\n", 2)) { // out of bounds checks unnecessary (null at the end)
                     skip = FALSE;
                     newinter_length--;
