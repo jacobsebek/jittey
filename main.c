@@ -15,6 +15,9 @@
 // An eddit control accelerator code to delete the word behind the cursor (Ctrl+Backspace)
 #define ACC_EDIT_DELETEWORD 0
 
+// Minwindef.h (a part of windows.h) apparently already has a max macro, so let's use that
+//#define max(a, b) ((a) > (b) ? (a) : (b))
+
 // Describes if the string loaded uses '\n' or '\r\n' to signify line breaks
 enum linebreak {
     LINEBREAK_UNIX,
@@ -136,7 +139,15 @@ static void error_box_format(PCWSTR caption, PCWSTR msg, ...) {
 
 // Updates the status bar's proportions according to the width of the window
 static void resize_status_bar() {
-    CONST INT sizes[4] = {Width-330, Width-230, Width-130, -1};
+
+    // Observations have shown that the part size has to be greater than 0, otherwise everything breakes
+    INT sizes[4] = {
+        max(Width-330, 1), 
+        max(Width-230, 1), 
+        max(Width-130, 1), 
+        -1
+    };
+
     SendMessageW(Gui.status, SB_SETPARTS, (WPARAM)4, (LPARAM)sizes);
     SendMessageW(Gui.status, WM_SIZE, 0, 0);
 }
