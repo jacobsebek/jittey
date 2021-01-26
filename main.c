@@ -915,7 +915,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // Get the theme-specific default system fonts
             {
                 // TODO: this is not recommended so we should just specify our own font, as shown below
-                Fonts.editor = GetStockObject(DEFAULT_GUI_FONT);
+                Fonts.filename = GetStockObject(DEFAULT_GUI_FONT);
+                Layout.filename_height = 15;
 
                 // Attempt to set Consolas 14 as the font
                 LOGFONTW font = {0};
