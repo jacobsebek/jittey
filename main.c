@@ -1,7 +1,9 @@
-#include <Windows.h>
-#include <Strsafe.h>
-#include <Commctrl.h>
-#include <stddef.h>
+// All the base windows functions
+#include <windows.h>
+// The StringCb* functions, sort of replacement for string.h
+#include <strsafe.h>
+// Some functions regarding the common controls
+#include <commctrl.h>
 
 // We need this for the error_box_format function
 #include <stdarg.h>
