@@ -41,7 +41,7 @@ CONST struct format Internal_format = {
     .bom = FALSE
 };
 
-struct format Default_format = {
+CONST struct format Default_format = {
     .encoding = ENCODING_UTF8,
     .bom = FALSE,
     .linebreak = LINEBREAK_WIN
@@ -53,7 +53,7 @@ struct bom { UINT32 data; SIZE_T size; };
 // The main and only window
 static HWND Window = NULL;
 // The size, in pixels, of the window's client area
-static int Width = 640, Height = 480;
+static INT Width = 640, Height = 480;
 
 // The preferred fonts to use for the window elements
 // The add_* functions use these fonts for new controls
@@ -89,12 +89,11 @@ static struct {
 // Show a formatted MessageBox with the latest error obtained by GetLastError()
 static void error_box_winerror(PCWSTR caption) {
 
-    DWORD err = GetLastError();
+    CONST DWORD err = GetLastError();
 
     WCHAR buf[128];
     if (FAILED(StringCbPrintfW(buf, sizeof(buf), L"%ls\n%d (0x%X)", caption, err, err)))
-        if (FAILED(StringCbCopyW(buf, sizeof(buf), L"Failed to format the error message")))
-            buf[0] = L'\0';
+        StringCbCopyW(buf, sizeof(buf), L"Failed to format the error message");
     
     MessageBoxW(Window, 
                 buf,
@@ -125,8 +124,7 @@ static void error_box_format(PCWSTR caption, PCWSTR msg, ...) {
 
     WCHAR buf[256];
     if (FAILED(StringCbVPrintfW(buf, sizeof(buf), msg, args)))
-        if (FAILED(StringCbCopyW(buf, sizeof(buf), L"Failed to format the error message")))
-            buf[0] = L'\0';
+        StringCbCopyW(buf, sizeof(buf), L"Failed to format the error message");
 
     MessageBoxW(Window, 
                buf,
@@ -138,12 +136,12 @@ static void error_box_format(PCWSTR caption, PCWSTR msg, ...) {
 
 // Updates the status bar's proportions according to the width of the window
 static void resize_status_bar() {
-    INT sizes[4] = {Width-330, Width-230, Width-130, -1};
+    CONST INT sizes[4] = {Width-330, Width-230, Width-130, -1};
     SendMessageW(Gui.status, SB_SETPARTS, (WPARAM)4, (LPARAM)sizes);
     SendMessageW(Gui.status, WM_SIZE, 0, 0);
 }
 
-// Adds an already set-up status bar to the window
+// Adds an already set-up status bar to the window (resize_status_bar must be called to separate it though)
 static HWND add_status_bar() {
     HWND sbar = CreateWindowW(
             STATUSCLASSNAMEW,
@@ -162,7 +160,7 @@ static HWND add_status_bar() {
 }
 
 // Change the format displayed on the status bar (and thus even the global current file settings)
-static void change_format(struct format format) {
+static void change_format(CONST struct format format) {
 
     // Change the type variable itself
     Settings.format = format;
@@ -183,7 +181,7 @@ static void change_format(struct format format) {
 }
 
 // Change the cursor position displayed on the status bar
-static void change_status_pos(ULONGLONG row, ULONGLONG col) {
+static void change_status_pos(CONST ULONGLONG row, CONST ULONGLONG col) {
     WCHAR buf[128];
 
     // Format the lines and columns
@@ -253,7 +251,7 @@ static LRESULT CALLBACK EditProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 }
 
 // Adds an edit control to the main window (unscaled, unpositioned, check the resize() method)
-static HWND add_text_box(CONST UINT id, BOOL wrap) {
+static HWND add_text_box(CONST UINT id, CONST BOOL wrap) {
     HWND text_box = CreateWindowExW(
         WS_EX_CLIENTEDGE,
         WC_EDITW,
@@ -261,7 +259,7 @@ static HWND add_text_box(CONST UINT id, BOOL wrap) {
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_MULTILINE | WS_VSCROLL | (wrap ? ES_AUTOHSCROLL | WS_HSCROLL : 0),
         0,0,0,0,
         Window,
-        (HMENU)(DWORD_PTR)id,
+        (HMENU)(UINT_PTR)id,
         (HINSTANCE)GetWindowLongPtr(Window, GWLP_HINSTANCE),
         NULL
     );
@@ -275,7 +273,7 @@ static HWND add_text_box(CONST UINT id, BOOL wrap) {
 }
 
 // Adds a static text to the main window (unscaled, unpositioned, check the resize() method)
-static HWND add_static_text(CONST INT id) {
+static HWND add_static_text(CONST UINT id) {
 
     HWND static_text = CreateWindowW(
         WC_STATICW,
@@ -283,7 +281,7 @@ static HWND add_static_text(CONST INT id) {
         WS_CHILD | WS_VISIBLE | SS_SIMPLE,
         0, 0, 0, 0,
         Window,
-        (HMENU)(DWORD_PTR)id,
+        (HMENU)(UINT_PTR)id,
         (HINSTANCE)GetWindowLongPtr(Window, GWLP_HINSTANCE),
         NULL
     );
@@ -297,7 +295,7 @@ static HWND add_static_text(CONST INT id) {
 }
 
 // Adds a button with a title with an ID to a menu
-static void add_menu_button(HMENU menu, UINT id, PCWSTR title) {
+static void add_menu_button(HMENU menu, CONST UINT id, PCWSTR title) {
     MENUITEMINFOW info;
     info.cbSize = sizeof(MENUITEMINFOW);
     info.fMask = MIIM_STRING | MIIM_ID;
@@ -309,7 +307,7 @@ static void add_menu_button(HMENU menu, UINT id, PCWSTR title) {
 }
 
 // Inserts a button with a title, ID and a checkbox to the menu (the default state is unchecked)
-static void add_menu_checkbox(HMENU menu, UINT id, PCWSTR title) {
+static void add_menu_checkbox(HMENU menu, CONST UINT id, PCWSTR title) {
     MENUITEMINFOW info;
     info.cbSize = sizeof(MENUITEMINFOW);
     info.fMask = MIIM_STRING | MIIM_ID | MIIM_CHECKMARKS | MIIM_STATE;
@@ -326,7 +324,7 @@ static void add_menu_checkbox(HMENU menu, UINT id, PCWSTR title) {
 }
 
 // Adds a submenu to a menu item
-static void add_menu_submenu(HMENU menu, HMENU submenu, PCWSTR title) {
+static void add_menu_submenu(HMENU menu, CONST HMENU submenu, PCWSTR title) {
     MENUITEMINFOW info;
     info.cbSize = sizeof(MENUITEMINFOW);
     info.fMask = MIIM_STRING | MIIM_SUBMENU;
@@ -460,7 +458,7 @@ static PCWSTR choose_file(CONST BOOL save) {
 }
 
 // Get's a standard BOM for the specified encoding
-static struct bom get_bom(enum encoding encoding) {
+static CONST struct bom get_bom(CONST enum encoding encoding) {
     struct bom bom;
 
     switch (encoding) {
@@ -485,7 +483,7 @@ static struct bom get_bom(enum encoding encoding) {
 // If the 'nullterm' argument is FALSE, the returned string is not guaranteed to be null-terminated and the new_size variable is set to the size without the null terminator
 // If the 'src_should_free' flag is TRUE, the 'src' argument is guaranteed to be freed using HeapFree after the conversion
 // The new_size pointer points to a valid memory address or NULL, if it is not NULL, it is set to the size of the returned buffer
-static PVOID convert(PVOID src, struct format from, struct format to, BOOL nullterm, BOOL src_should_free, SIZE_T* new_size) {
+static PVOID convert(PVOID src, CONST struct format from, CONST struct format to, CONST BOOL nullterm, CONST BOOL src_should_free, SIZE_T* new_size) {
 
     // The conversion (intermediate) buffer
     SIZE_T inter_size = 0;
@@ -520,7 +518,7 @@ static PVOID convert(PVOID src, struct format from, struct format to, BOOL nullt
 
             // Firstly, let's do a dry run to determine the size of the output
             SIZE_T inter_length;
-            if (!(inter_length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (PBYTE)src+from_bom.size, -1, NULL, 0))) {
+            if (!(inter_length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (PCHAR)src+from_bom.size, -1, NULL, 0))) {
                 error_box_winerror(L"Invalid encoding");
                 fail = TRUE;
                 goto quit;
@@ -532,7 +530,7 @@ static PVOID convert(PVOID src, struct format from, struct format to, BOOL nullt
             inter_should_free = TRUE;
 
             // The actual conversion
-            if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (PBYTE)src+from_bom.size, -1, inter, inter_length) != inter_length) {
+            if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (PCHAR)src+from_bom.size, -1, inter, inter_length) != inter_length) {
                 error_box_winerror(L"Invalid encoding");
                 fail = TRUE;
                 goto quit;
@@ -567,7 +565,7 @@ static PVOID convert(PVOID src, struct format from, struct format to, BOOL nullt
             // Write to the new buffer with corrected newlines
             {
                 PWCHAR dc = newinter;
-                PCWCHAR sc = inter;
+                CONST WCHAR* sc = inter;
                 for (; *sc; dc++, sc++) {
                     if (*sc == L'\n' && (sc-inter == 0 || *(sc-1) != L'\r'))
                         *(dc++) = L'\r';
@@ -606,7 +604,7 @@ static PVOID convert(PVOID src, struct format from, struct format to, BOOL nullt
             // Write to the new buffer with corrected newlines
             {
                 PWCHAR dc = newinter;
-                PCWCHAR sc = inter;
+                CONST WCHAR* sc = inter;
                 for (; *sc; dc++, sc++) {
                     if (!wcsncmp(sc, L"\r\n", 2)) {
                         dc--;
@@ -681,7 +679,7 @@ static PVOID convert(PVOID src, struct format from, struct format to, BOOL nullt
                 memcpy(newinter, &to_bom.data, to_bom.size);
                 // The actual conversion
                 // TODO: Look at the length of this, god please
-                if (WideCharToMultiByte(CP_UTF8, 0, inter, inter_size/sizeof(WCHAR)-(!nullterm), (PBYTE)newinter+to_bom.size, newinter_size-to_bom.size, NULL, NULL) != newinter_size-to_bom.size) {
+                if (WideCharToMultiByte(CP_UTF8, 0, inter, inter_size/sizeof(WCHAR)-(!nullterm), (PCHAR)newinter+to_bom.size, newinter_size-to_bom.size, NULL, NULL) != newinter_size-to_bom.size) {
                     error_box_winerror(L"Failed to convert the input string");
                     fail = TRUE;
                     goto quit;
@@ -720,23 +718,20 @@ static PVOID convert(PVOID src, struct format from, struct format to, BOOL nullt
 }
 
 // Guesses the format of the input string
-static struct format get_format(PCSTR src, CONST SIZE_T src_size) {
+static CONST struct format get_format(LPCVOID src, CONST SIZE_T src_size) {
 
     struct format format = {0};
 
     if (IsTextUnicode(src, src_size, NULL)) {
         format.encoding = ENCODING_UTF16;
-        struct bom bom = get_bom(ENCODING_UTF16); // get the BOM for utf-16 (LE)
+        CONST struct bom bom = get_bom(ENCODING_UTF16); // get the BOM for utf-16 (LE)
 
         // If the source bigger or equally big as the BOM, we can safely check it's presence
         if (src_size >= bom.size)
             format.bom = !memcmp(src, &bom.data, bom.size);
-        
-        if (!format.bom) // necessary for the next operation
-            bom.size = 0;
 
         format.linebreak = LINEBREAK_WIN;
-        CONST WCHAR* start = (CONST WCHAR*)(src + bom.size);
+        CONST WCHAR* start = (CONST WCHAR*)((PWSTR)src + (format.bom * bom.size));
         CONST WCHAR* wc = start;
         while (wc = wcschr(wc+1, L'\n')) {
             if (wc - start == 0 || *(wc-1) != L'\r') {
@@ -749,13 +744,13 @@ static struct format get_format(PCSTR src, CONST SIZE_T src_size) {
         // For comments about this section, just look above, it's the same thing, just for UTF-8
 
         format.encoding = ENCODING_UTF8;
-        struct bom bom = get_bom(ENCODING_UTF8);
+        CONST struct bom bom = get_bom(ENCODING_UTF8);
 
          if (src_size >= bom.size)
             format.bom = !memcmp(src, &bom.data, bom.size);
 
         format.linebreak = LINEBREAK_WIN;
-        CONST CHAR* start = (CONST CHAR*)(src + bom.size);
+        CONST CHAR* start = (CONST CHAR*)((PSTR)src + (format.bom * bom.size));
         CONST CHAR* c = start;
         while (c = strchr(c+1, '\n')) {
             if (c - start == 0 || *(c-1) != '\r') {
@@ -919,19 +914,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // Setup fonts
             // Get the theme-specific default system fonts
             {
-                NONCLIENTMETRICSW nonclient_metrics;
-                nonclient_metrics.cbSize = sizeof(NONCLIENTMETRICSW);
-                if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &nonclient_metrics, 0))
-                    fatal(L"Failed to retrieve the Non-client metrics");
-
-                //TODO: yes, this is hardcoded
-                Layout.filename_height = 15;
-                Fonts.filename = CreateFontIndirectW(&nonclient_metrics.lfStatusFont);
-
-                // Scale the Font editor text just a tad
-                //nonclient_metrics.lfSmCaptionFont.lfHeight *= 1.1;
-                //Fonts.editor = CreateFontIndirectW(&nonclient_metrics.lfSmCaptionFont);
-                //Fonts.editor = GetStockObject(SYSTEM_FIXED_FONT);
+                // TODO: this is not recommended so we should just specify our own font, as shown below
+                Fonts.editor = GetStockObject(DEFAULT_GUI_FONT);
 
                 // Attempt to set Consolas 14 as the font
                 LOGFONTW font = {0};
@@ -1097,19 +1081,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd) {
 
     // This procedure is necessary to ensure that up-to-date controls get loaded
-    INITCOMMONCONTROLSEX icc;
-    icc.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icc.dwICC = ICC_STANDARD_CLASSES;
-    // It is not crucial for this to succeed, so we don't care if it fails (it will just use the old style)
-    InitCommonControlsEx(&icc);
+    {
+        INITCOMMONCONTROLSEX icc;
+        icc.dwSize = sizeof(INITCOMMONCONTROLSEX);
+        icc.dwICC = ICC_STANDARD_CLASSES;
+        // It is not crucial for this to succeed, so we don't care if it fails (it will just use the old style)
+        InitCommonControlsEx(&icc);
+    }
 
     // Setup the main window
     {
         // Specify the style
         PCWSTR class = L"MainClass";
         PCWSTR title = L"Jittey 0.1";
-        DWORD window_style = WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
-        HBRUSH bgcol = GetSysColorBrush(COLOR_WINDOW);
+        CONST DWORD window_style = WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
+        CONST HBRUSH bgcol = GetSysColorBrush(COLOR_WINDOW);
 
         // Register the main window class
         {
