@@ -12,7 +12,7 @@
 #define NEW_FILE_NAME L"Empty file"
 // A custom window message to signify that the caret of a text-box has moved
 #define WM_USER_CARETMOVE (WM_USER+0)
-// An eddit control accelerator code to delete the word behind the cursor (Ctrl+Backspace)
+// An edit control accelerator code to delete the word behind the cursor (Ctrl+Backspace)
 #define ACC_EDIT_DELETEWORD 0
 
 // Minwindef.h (a part of windows.h) apparently already has a max macro, so let's use that
